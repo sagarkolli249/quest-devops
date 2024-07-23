@@ -65,8 +65,8 @@ If you _want_ to host it longer for us to view it, we recommend taking a screens
 ### Q. What if I successfully complete all the challenges?
 We have many more for you to solve as a member of the Rearc team!
 
-### Q. What if I find a bug?
-Awesome! Tell us you found a bug along with your submission and we'll talk more!
+### Q. What if I find a bug or part of my solution isn't detected?
+Awesome! Tell us you found a bug or that the quest can't detect a task you've solved when you submit your quest and we'll talk more!
 
 ### Q. What if I fail?
 There is no fail. Complete whatever you can and then submit your work. Doing _everything_ in the quest is not a guarantee that you will "pass" the quest, just like not doing something is not a guarantee you will "fail" the quest.
