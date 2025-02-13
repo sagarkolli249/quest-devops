@@ -7,7 +7,6 @@
     "start": "node src/000.js"
   },
   "dependencies": {
-    "aws-serverless-express": "^3.4.0",
     "express": "~4.16.3"
   },
   "keywords": [],

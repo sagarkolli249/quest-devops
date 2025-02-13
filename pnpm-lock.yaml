@@ -8,22 +8,11 @@ importers:
 
   .:
     dependencies:
-      aws-serverless-express:
-        specifier: ^3.4.0
-        version: 3.4.0
       express:
         specifier: ~4.16.3
         version: 4.16.4
 
 packages:
-
-  '@codegenie/serverless-express@3.4.1':
-    resolution: {integrity: sha512-PQ3v/wDflxx168B4TwuxbbKjfmvLkyRBdvHRFS8s48hDS0Wnukm+5Dp+HiLvqwXOU7PP2+FyrK47WX4WL15Rrw==}
-    engines: {node: '>=6'}
-
-  '@vendia/serverless-express@3.4.1':
-    resolution: {integrity: sha512-4dJJvr9vQlq9iUClpfm5iFL+neoSctUI6Zkh9F4wjk/tpcM7QVD6niJi4ptiIzyzJCWoN97ACQCXyE0O8MznLQ==}
-    engines: {node: '>=6'}
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -31,13 +20,6 @@ packages:
 
   array-flatten@1.1.1:
     resolution: {integrity: sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg==}
-
-  aws-serverless-express@3.4.0:
-    resolution: {integrity: sha512-YG9ZjAOI9OpwqDDWzkRc3kKJYJuR7gTMjLa3kAWopO17myoprxskCUyCEee+RKe34tcR4UNrVtgAwW5yDe74bw==}
-    engines: {node: '>=6'}
-
-  binary-case@1.1.4:
-    resolution: {integrity: sha512-9Kq8m6NZTAgy05Ryuh7U3Qc4/ujLQU1AZ5vMw4cr3igTdi5itZC6kCNrRr2X8NzPiDn2oUIFTfa71DKMnue/Zg==}
 
   body-parser@1.18.3:
     resolution: {integrity: sha512-YQyoqQG3sO8iCmf8+hyVpgHHOv0/hCEFiS4zTGUwTA1HjAFX66wRcNQrVCeJq9pgESMRvUAOvSil5MJlmccuKQ==}
@@ -218,31 +200,12 @@ packages:
 
 snapshots:
 
-  '@codegenie/serverless-express@3.4.1':
-    dependencies:
-      binary-case: 1.1.4
-      type-is: 1.6.18
-
-  '@vendia/serverless-express@3.4.1':
-    dependencies:
-      '@codegenie/serverless-express': 3.4.1
-      binary-case: 1.1.4
-      type-is: 1.6.18
-
   accepts@1.3.8:
     dependencies:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
   array-flatten@1.1.1: {}
-
-  aws-serverless-express@3.4.0:
-    dependencies:
-      '@vendia/serverless-express': 3.4.1
-      binary-case: 1.1.4
-      type-is: 1.6.18
-
-  binary-case@1.1.4: {}
 
   body-parser@1.18.3:
     dependencies:
