@@ -33,6 +33,28 @@ resource "aws_ecr_repository" "quest_container_repo" {
   name = "quest-container-repository"
 }
 
+resource "aws_ecr_repository_policy" "quest_ecr_policy" {
+  repository = aws_ecr_repository.quest_container_repo.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { "AWS" : aws_iam_role.ecs_task_execution.arn }
+        Action    = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:DescribeRepositories",
+          "ecr:GetRepositoryPolicy"
+        ]
+      }
+    ]
+  })
+}
+
+
 # -----------------------------
 # ECS Task Definition
 # -----------------------------
@@ -223,15 +245,29 @@ resource "aws_vpc" "quest_vpc" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "quest_subnet_1" {
-  vpc_id            = aws_vpc.quest_vpc.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                  = aws_vpc.quest_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
 }
 
 resource "aws_subnet" "quest_subnet_2" {
-  vpc_id            = aws_vpc.quest_vpc.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                  = aws_vpc.quest_vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = true
+
+}
+
+resource "aws_route_table_association" "quest_assoc_1" {
+  subnet_id      = aws_subnet.quest_subnet_1.id
+  route_table_id = aws_route_table.quest_rt.id
+}
+
+resource "aws_route_table_association" "quest_assoc_2" {
+  subnet_id      = aws_subnet.quest_subnet_2.id
+  route_table_id = aws_route_table.quest_rt.id
 }
 
 resource "aws_internet_gateway" "quest_gw" {
@@ -261,4 +297,9 @@ variable "aws_region" {
 output "alb_dns_name" {
   description = "Load Balancer DNS Name"
   value       = aws_lb.quest_alb.dns_name
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL"
+  value       = aws_ecr_repository.quest_container_repo.repository_url
 }
