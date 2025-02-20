@@ -1,0 +1,27 @@
+---
+name: CI Dockerfile
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.published == true && github.ref_name || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${{ github.event.release.published == true && github.ref_name || $(git rev-parse --short HEAD)}}" >> "${GITHUB_ENV}"
+
+      - run: echo ${{ env.IMAGE_TAG }}
