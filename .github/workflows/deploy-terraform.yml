@@ -47,6 +47,6 @@ jobs:
         working-directory: terraform-infra
 
       - name: Apply Terraform
-        if: github.ref == 'refs/heads/main'
+        # if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
         working-directory: terraform-infra
