@@ -5,7 +5,7 @@ provider "aws" {
 # VPC with minimal setup for Free Tier
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.14.2"
+  version = "5.0.0" # Updated to latest version
 
   name = "secure-vpc"
   cidr = "10.0.0.0/16"
@@ -18,7 +18,6 @@ module "vpc" {
   enable_vpn_gateway = false
 }
 
-
 resource "aws_ecr_repository" "secure_repo" {
   name                 = "secure-app-repo"
   image_tag_mutability = "IMMUTABLE"
@@ -27,7 +26,6 @@ resource "aws_ecr_repository" "secure_repo" {
     encryption_type = "AES256"
   }
 }
-
 
 resource "aws_iam_policy" "ecr_access" {
   name        = "ECRAccessPolicy"
@@ -50,10 +48,9 @@ resource "aws_iam_policy" "ecr_access" {
   })
 }
 
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "18.20.2"
+  version = "19.0.0" # Updated to latest version
 
   cluster_name    = "secure-eks"
   cluster_version = "1.27"
