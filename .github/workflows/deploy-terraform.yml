@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+
 jobs:
   terraform:
     name: Deploy Terraform
@@ -35,7 +36,7 @@ jobs:
           environment: AWS
 
       - name: Initialize Terraform
-        run: terraform init
+        run: terraform init -backend=true
         working-directory: terraform-infra
 
       - name: Validate Terraform
@@ -43,10 +44,60 @@ jobs:
         working-directory: terraform-infra
 
       - name: Plan Terraform
-        run: terraform plan
+        run: terraform plan -out=tfplan
         working-directory: terraform-infra
+
+      - name: Save Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: terraform-infra/tfplan
 
       - name: Apply Terraform
         # if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+        working-directory: terraform-infra
+
+      - name: Save Terraform State
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-state
+          path: terraform-infra/terraform.tfstate
+
+  terraform-destroy:
+    name: Destroy Terraform
+    runs-on: ubuntu-latest
+    needs: terraform
+    environment: AWS
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          environment: AWS
+
+      - name: Restore Terraform State
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-state
+          path: terraform-infra
+
+      - name: Initialize Terraform
+        run: terraform init -backend=true
+        working-directory: terraform-infra
+
+      - name: Destroy Terraform
         run: terraform destroy -auto-approve
         working-directory: terraform-infra
