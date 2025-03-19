@@ -7,7 +7,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.0.0" # Updated to latest version
 
-  name = "secure-vpc"
+  name = "sec-vpc"
   cidr = "10.0.0.0/16"
 
   azs             = ["us-east-1a", "us-east-1b"] # Added a second AZ
@@ -18,8 +18,8 @@ module "vpc" {
   enable_vpn_gateway = false
 }
 
-resource "aws_ecr_repository" "secure_repo" {
-  name                 = "secure-app-repo"
+resource "aws_ecr_repository" "sec_repo" {
+  name                 = "sec-app-repo"
   image_tag_mutability = "IMMUTABLE"
 
   encryption_configuration {
@@ -37,7 +37,7 @@ resource "aws_iam_policy" "ecr_access" {
       {
         Effect   = "Allow",
         Action   = ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage", "ecr:BatchCheckLayerAvailability"],
-        Resource = aws_ecr_repository.secure_repo.arn
+        Resource = aws_ecr_repository.sec_repo.arn
       },
       {
         Effect   = "Allow",
@@ -52,7 +52,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.0.0" # Updated to latest version
 
-  cluster_name    = "secure-eks"
+  cluster_name    = "sec-eks"
   cluster_version = "1.27"
 
   vpc_id     = module.vpc.vpc_id
@@ -74,5 +74,5 @@ output "eks_cluster_name" {
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.secure_repo.repository_url
+  value = aws_ecr_repository.sec_repo.repository_url
 }
