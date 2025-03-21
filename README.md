@@ -109,8 +109,8 @@ Ensure you have the following before deploying:
 ## Deployment Steps
 ### 1. Clone the Repository
 ```sh
- git clone https://github.com/your-repo.git
- cd your-repo
+ git clone https://github.com/sagarkolli249/quest-devops.git
+ cd quest-devops
 ```
 
 ### 2. Initialize Terraform
@@ -175,4 +175,3 @@ Ensure `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are correctly set in GitH
  kubectl get pods -n ingress-nginx
  kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
 ```
-
