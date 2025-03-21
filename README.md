@@ -76,3 +76,103 @@ No. After interviewing, please change any solutions shared publicly to be privat
 
 ### Q. Do I have to spend money out of my own pocket to complete the quest?
 No. There are many possible solutions to this quest that would be zero cost to you when using [AWS](https://aws.amazon.com/free), [GCP](https://cloud.google.com/free), or [Azure](https://azure.microsoft.com/en-us/pricing/free-services).
+
+
+# Solution
+
+
+# Terraform AWS EKS & ECR Deployment with Ingress-NGINX
+
+## Overview
+This Terraform configuration sets up an AWS infrastructure with the following components:
+- A **VPC** with public and private subnets.
+- An **EKS cluster** with a managed node group.
+- A **private ECR repository** for container storage.
+- **Ingress-NGINX** deployed for Kubernetes ingress control.
+- **GitHub Actions pipeline** for automated deployment.
+
+## Architecture
+- The VPC spans **two availability zones** with both **public and private subnets**.
+- The EKS cluster is deployed in the **private subnets**.
+- ECR is used for securely storing container images.
+- Ingress-NGINX is automatically installed after cluster creation.
+
+## Prerequisites
+Ensure you have the following before deploying:
+- **Terraform** (v1.0+)
+- **AWS CLI** (configured with credentials)
+- **kubectl** (for Kubernetes management)
+- **GitHub Actions Secrets**:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+
+## Deployment Steps
+### 1. Clone the Repository
+```sh
+ git clone https://github.com/your-repo.git
+ cd your-repo
+```
+
+### 2. Initialize Terraform
+```sh
+ terraform init
+```
+
+### 3. Plan the Infrastructure
+```sh
+ terraform plan
+```
+
+### 4. Apply Terraform Configuration
+```sh
+ terraform apply -auto-approve
+```
+
+### 5. Verify EKS Cluster
+```sh
+ aws eks --region us-east-1 update-kubeconfig --name secure-eks
+ kubectl get nodes
+```
+
+### 6. Verify Ingress-NGINX Deployment
+```sh
+ kubectl get pods -n ingress-nginx
+```
+
+## Destroying the Infrastructure
+To remove all resources:
+```sh
+ terraform destroy -auto-approve
+```
+
+## GitHub Actions CI/CD Pipeline
+This setup includes a **GitHub Actions workflow** that:
+1. **Validates** and **plans** Terraform changes.
+2. **Applies** infrastructure changes on a push to `main`.
+3. **Stores Terraform state files** to preserve state across runs.
+
+## Outputs
+After deployment, Terraform provides the following outputs:
+- **EKS Cluster Name**
+- **ECR Repository URL**
+
+## Notes
+- The EKS cluster uses a **single t3.micro instance** to stay within **AWS Free Tier**.
+- Modify `eks_managed_node_groups` in `terraform.tf` for scaling as needed.
+
+## Troubleshooting
+### 1. EKS Not Accessible?
+Ensure your kubeconfig is updated:
+```sh
+ aws eks --region us-east-1 update-kubeconfig --name secure-eks
+```
+
+### 2. Terraform Fails Due to Missing AWS Credentials
+Ensure `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are correctly set in GitHub Secrets.
+
+### 3. Ingress-NGINX Not Deploying?
+```sh
+ kubectl get pods -n ingress-nginx
+ kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+```
+
