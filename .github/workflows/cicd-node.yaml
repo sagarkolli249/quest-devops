@@ -1,0 +1,140 @@
+name: CI/CD Pipeline for Node.js App
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1  
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker Image
+      run: |
+        docker build -t quest-node-app .
+
+    - name: Tag and Push Image to ECR
+      run: |
+        IMAGE_TAG=$(date +%s)
+        docker tag quest-node-app ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/quest-node-app:$IMAGE_TAG
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/quest-node-app:$IMAGE_TAG
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+  sonarqube:
+    name: Run SonarQube Scan
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Run SonarQube Analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_URL }}
+      run: |
+        sonar-scanner \
+          -Dsonar.projectKey=quest-node-app \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.login=$SONAR_TOKEN
+
+  security-scan:
+    name: Scan for Vulnerabilities
+    runs-on: ubuntu-latest
+    needs: sonarqube
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Run Trivy Scan
+      run: |
+        trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+
+  create-self-signed-cert:
+    name: Create Self-Signed Certificate
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+    - name: Generate Self-Signed Certificate
+      run: |
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -keyout app.quest.com.key -out app.quest.com.crt \
+          -subj "/CN=app.quest.com/O=MyOrg"
+        mkdir -p certs
+        mv app.quest.com.crt certs/
+        mv app.quest.com.key certs/
+
+    - name: Upload Certificate as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: self-signed-cert
+        path: certs/
+
+  deploy:
+    name: Deploy to Kubernetes using Helm
+    runs-on: ubuntu-latest
+    needs: create-self-signed-cert
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Retrieve Kubernetes Config
+      run: |
+        aws eks update-kubeconfig --name sec-eks --region us-east-1
+
+    - name: Download Certificate Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: self-signed-cert
+        path: certs/
+
+    - name: Create Kubernetes TLS Secret
+      run: |
+        kubectl create namespace quest
+        kubectl create secret tls app-quest-tls \
+          --cert=certs/app.quest.com.crt \
+          --key=certs/app.quest.com.key \
+          --namespace quest || true
+
+    - name: Deploy Helm Chart
+      run: |
+        helm upgrade --install quest-node-app ./quest-node-app -n quest \
+          --set image.repository=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/quest-node-app \
+          --set image.tag=${{ env.IMAGE_TAG }}

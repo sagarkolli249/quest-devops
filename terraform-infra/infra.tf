@@ -69,6 +69,17 @@ module "eks" {
   }
 }
 
+resource "null_resource" "install_ingress_nginx" {
+  depends_on = [module.eks]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      aws eks --region us-east-1 update-kubeconfig --name secure-eks
+      kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/aws/deploy.yaml
+    EOT
+  }
+}
+
 output "eks_cluster_name" {
   value = module.eks.cluster_name
 }
